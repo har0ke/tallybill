@@ -1,0 +1,219 @@
+{% extends "main.html" %}
+{% load filters %}
+
+{% block header %}
+    <style>
+        .total-column {
+            text-align: right;
+            white-space: nowrap;
+        }
+    </style>
+    <script>
+        $(function () {
+            $('.input-group.date').datepicker({
+                format: "dd.mm.yyyy",
+                language: "de"
+            });
+            recalc();
+            $('.order-row').find("input").change(recalc);
+
+            var inputs = document.querySelectorAll('input[list]');
+            for (var i = 0; i < inputs.length; i++) {
+              // When the value of the input changes...
+              inputs[i].addEventListener('change', function(e) {
+                var optionFound = false,
+                  datalist = this.list;
+                var input = e.target,
+                    list = input.getAttribute('list'),
+                    options = document.querySelectorAll('#' + list + ' option'),
+                    hiddenInput = document.getElementById(input.id + '-hidden'),
+                    inputValue = input.value;
+                hiddenInput.value = inputValue;
+                // Determine whether an option exists with the current value of the input.
+                for (var j = 0; j < datalist.options.length; j++) {
+                    if (this.value == datalist.options[j].value) {
+                        optionFound = true;
+                        hiddenInput.value =  datalist.options[j].getAttribute('data-value');
+                        break;
+                    }
+                }
+                // use the setCustomValidity function of the Validation API
+                // to provide an user feedback if the value does not exist in the datalist
+                if (optionFound) {
+                  this.setCustomValidity('');
+                } else {
+                  this.setCustomValidity('Please select a valid value.');
+                }
+
+
+              });
+            }
+        });
+
+        var new_id = -1;
+        function recalc() {
+            var all_total = 0;
+            var rows = $(".order-row");
+            var last_filled = -1;
+            rows.each(function(idx, item){
+                var total = $(item).find(".total-column")[0];
+                var prod_field = $(item).find(".cons-product")[0];
+                var count = $(item).find(".cons-count")[0].value;
+                var product = prod_field.value;
+                var name = $(item).find(".cons-user")[0].value;
+
+                item.style.backgroundColor = "";
+                if (name || product || count) {
+                    last_filled = idx;
+                }
+                if (!name || !product || !count){
+                    item.style.backgroundColor = "#f0ad4e"
+                }
+                if(!name && !product && !count) {
+                    return false;
+                }
+
+            });
+            for(var i=0; i<rows.length; i++){
+                if (i == (last_filled + 1)){
+                    rows[i].style.backgroundColor = "#5cb85c"
+                }
+                if (i <= (last_filled + 1)) {
+                    rows[i].style.display = "table-row";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+            $("#all-total")[0].innerHTML = all_total.toFixed(2) + " €";
+        }
+
+        function delete_entry(e, id, user, count, product, date) {
+            console.log(e.target);
+            $("#confirm-delete").find(".modal-body").html("Willst du wirklich den Verbrauch von " + count + "x" + product + " für den User " + user + " vom " + date +  " löschen?");
+            $("#delete_id").val(id);
+            $("#confirm-delete").modal("show");
+            console.log(id);
+        }
+
+    </script>
+
+{% endblock %}
+
+{% block content %}
+<form id="delete_form" method="POST" style="display: none">
+    {% csrf_token %}
+    <input hidden name="delete"/>
+    <input hidden id="delete_id" name="id"/>
+</form>
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Deleting Consumption
+            </div>
+            <div class="modal-body">
+                Do you really want to delete this Consumption? This cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger" type="submit" form="delete_form">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="in_inv_form" method="POST" style="max-width: 800px; margin: auto;">{% csrf_token %}
+<h1>Create Consumptions</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Count</th>
+                <th>Produkt</th>
+            </tr>
+
+        </thead>
+    <tbody>
+            <datalist id="users">
+                {% for p in users %}
+                      <option data-value="{{ p.id }}">{{ p.username }}</option>
+                {% endfor %}
+            </datalist>
+            <datalist id="products">
+                {% for p in products %}
+                      <option data-value="{{ p.id }}">{{ p.name }}</option>
+                {% endfor %}
+            </datalist>
+            {% for order in range %}
+            <tr class="order-row" style="display: none;">
+                <td>
+                    <input class="form-control cons-user" list="users" id="cons-user/{{ order.pk }}" type="text"/>
+                     <input style="display: none" name="cons-user/{{ order.pk }}" id="cons-user/{{ order.pk }}-hidden" type="text"/>
+                </td>
+                <td>
+                    <input type="number" class="form-control cons-count" id=""  name="cons-count/{{ order.pk }}" value="{{ order.count }}">
+                </td>
+                <td>
+                    <input class="form-control cons-product" list="products" id="cons-product/{{ order.pk }}" type="text"/>
+                    <input style="display: none"  name="cons-product/{{ order.pk }}" id="cons-product/{{ order.pk }}-hidden" type="text"/>
+                </td>
+                <td class="total-column">0.00 €</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td></td>
+                <td></td>
+                <td style="text-align: right; font-weight: bold">Total:</td>
+                <td class="total-column" id="all-total">0.00 €</td>
+            </tr>
+        </tbody>
+    </table>
+    </form>
+
+
+    <table style="width: 100%;max-width: 800px;margin: auto;">
+    <tr>
+        <td>
+
+        </td>
+        <td style="text-align: right">
+
+            <button style="margin-bottom: 10px" class="btn btn-primary" type="submit" form="in_inv_form" onsubmit="validate_form();">Save</button>
+        </td>
+    </tr>
+    </table>
+
+    <h2>All Consumptions created</h2>
+    <h4 style="margin-top: 30px; margin-bottom: 2px">Pages:</h4>
+    <nav aria-label="Page navigation example">
+      <ul class="pagination">
+        {% for p in pages %}
+            <li class="page-item"><a class="page-link" href="?p={{ p }}">{{ p }}</a></li>
+        {% endfor %}
+      </ul>
+    </nav>
+    <table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Count</th>
+            <th>Product</th>
+            <th>Date</th>
+            <th>x</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for c in consumptions %}
+        <tr>
+            <td> {{ c.user.username }}</td>
+            <td> {{ c.count }}</td>
+            <td> {{ c.product.name }}</td>
+            <td> {{ c.date }}</td>
+            <td><button onclick="delete_entry(event, {{ c.id }}, '{{ c.user.username }}',  '{{ c.count }}', '{{ c.product.name }}', '{{ c.date }}');" class="btn btn-warning glyphicon glyphicon-remove" type="button"></button></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+
+{% endblock %}
+

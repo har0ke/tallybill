@@ -1,0 +1,24 @@
+{% extends "main.html" %}
+
+{% load filters %}
+{% load humanize %}
+{% block content %}
+
+    <table style="width: 100%;">
+        <tr>
+            <td>
+                <h1>Incoming Invoices</h1>
+            </td>
+            <td style="text-align: right;">
+		    <a href="{{ base_url }}incoming_invoice/"><span class="glyphicon glyphicon-plus"></span></a>
+            </td>
+        </tr>
+    </table>
+
+    <div class="list-group">
+        {% for inc in incoming_invoices %}
+	<a href="{{ base_url }}incoming_invoice/{{ inc.id }}" class="list-group-item list-group-item-action">{{ inc.invoice_id }}<span style="float: right;">{{ inc.date|date:"d.m.Y" }}</span> </a>
+
+        {% endfor %}
+    </div>
+{% endblock %}

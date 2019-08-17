@@ -1,0 +1,149 @@
+{% extends "main.html" %}
+{% block header %}
+<script>
+
+$(window).ready(function () {
+    $("#footer-opener").on("click", click_popup);
+    $(window).ready(resize_buttons);
+    $(window).on('resize', resize_buttons);
+
+});
+
+
+</script>
+
+    <style>
+    </style>
+
+    <script>
+    function clear_button() {
+        dbClearOrderList();
+        htmlRefreshOrderList();
+    }
+    function ok_button() {
+
+    }
+
+    id_to_getr = { {% for product in products %}"{{ product.id }}": "{{ product.name }}"{% if not forloop.last %},{% endif %}{% endfor %} };
+    id_to_user = { {% for user in users %}"{{ user.id }}": "{{ user.username }}"{% if not forloop.last %},{% endif %}{% endfor %} };
+
+    $(window).on("load", function () {
+       $("#add-modal-button").click(function() {
+           dbAddToOrderList(parseInt($("#detailed-prod").val()), parseInt($("#ins-user").val()), parseInt($("#ins-count").val()))
+           htmlRefreshOrderList();
+           $("#detailed-modal").modal("toggle")
+       });
+       $(".on-btn-plus").click(function (evt) {
+           $("#detailed-prod").val($(evt.currentTarget).attr("data-product-id"));
+           $("#detailed-modal").modal()
+       });
+       $(".on-btn-single").click(function (evt) {
+           dbAddToOrderList(parseInt($(evt.currentTarget).attr("data-product-id")), {{ logged_in.pk }}, 1);
+           htmlRefreshOrderList();
+       });
+    });
+    </script>
+{% endblock %}
+{% block content %}
+
+    <div id="product-wrapper">
+        {% for product in products %}
+            <div class="btn-group btn-group-lg product-button">
+                <button data-product-id="{{ product.id }}" type="button" class="on-btn-single btn btn-primary product-button-one">{{ product.name }}</button>
+                <button data-product-id="{{ product.id }}" type="button" class="on-btn-plus btn btn-primary" data-toggle="modal"><span class="glyphicon glyphicon-plus"></span></button>
+
+                <!--<div style="display: inline-block;padding: 0;height: 100px">
+                    <button class="btn btn-primary"
+                            style="margin-left: -1px;height: 50px; border-bottom-left-radius: 0; border-top-left-radius: 0; border-bottom-right-radius: 0">
+                        <span class="glyphicon glyphicon-user"></span>
+                    </button>
+                    <button class="btn btn-primary"
+                            style="margin-left: -1px; margin-top: -1px; display:block;height: 51px; border-bottom-left-radius: 0; border-top-left-radius: 0; border-top-right-radius: 0">
+                        <span class="glyphicon glyphicon-plus"></span>
+                    </button>
+
+                </div>-->
+            </div>
+        {% endfor %}
+    <!-- clear space for footer -->
+    <div class="footer-height" style="clear:both"></div>
+    </div>
+
+
+{% endblock %}
+{% block after_container %}
+    <!-- footer -->
+    <div id="footer" class="footer-height">
+        <div class="footer-wrapper"name>
+            <div>
+                <span id="footer-opener" class="btn glyphicon glyphicon-menu-up" aria-hidden="true"></span>
+                <span id="footer-summary"> <span id="total-getr"> 4 </span> Getränke </span>
+                <form class="inline-form" style="float: right;" method="post">
+                    {% csrf_token %}
+                    <input id="json_data" type="hidden" name="json_data">
+                    <button type="button" onclick="clear_button();" class="btn btn-error btn">X</button>
+                    <button type="submit" class="btn btn-success btn">OK</button>
+                </form>
+            </div>
+            <div>
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Produkt</th>
+                        <th>Name</th>
+                        <th>Anzahl</th>
+                    </tr>
+                    </thead>
+                    <tbody id="order-list">
+                    <tr>
+                        <td>Goldochsen</td>
+                        <td>Oke</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>Afri</td>
+                        <td>Oke</td>
+                        <td>1</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="modal" tabindex="-1" role="dialog" id="detailed-modal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Detailed Order</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+              <div class="form-group">
+                <label for="ins-count">Select list:</label>
+                <select class="form-control" id="ins-count">
+                  {% for i in range %}
+                    <option {% if i == 1 %}selected{% endif %}>{{ i }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ins-user">Select list:</label>
+                <select class="form-control" id="ins-user">
+                  {% for i in users %}
+                    <option value="{{ i.id }}">{{ i.username }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <input type="hidden" value="" id="detailed-prod"/>
+          </div>
+          <div class="modal-footer">
+            <button id="add-modal-button" type="button" class="btn btn-primary">Add</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "main.html" %}
+{% block header %}
+<script>
+    $(function () {
+        $('.input-group.date').datepicker({
+            format: "dd.mm.yyyy",
+            language: "de"
+        });
+
+    });
+
+    function adjust() {
+        console.log("wob");
+        $(".calcfor").each(function(index, element) {
+        <!-- inventory.count / consumption -->
+            var supposedto = parseInt($(element).find(".supposedto")[0].innerHTML)
+            var actual = parseInt($(element).find(".actual")[0].value)
+            var consumption = parseInt($(element).find(".consumption")[0].innerHTML)
+            console.log((actual - supposedto) * 100 / consumption)
+            console.log($(element).find(".name")[0].innerHTML);
+        });
+    }
+    $(adjust);
+
+</script>
+
+{% endblock %}
+{% block content %}
+
+<form id="delete_form"  method="POST" style="display: none">
+    {% csrf_token %}
+    <input hidden name="delete"/>
+</form>
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Deleting Inventory
+            </div>
+            <div class="modal-body">
+                Do you really want to delete this Inventory? This cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger" type="submit" form="delete_form">Delete</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="inventory_form" method="POST">{% csrf_token %}
+    <label for="order-count">Inventory Date</label>
+    <div class="input-group date">
+      <input name="date" type="text" class="form-control" value="{{ date|date:"d.m.Y" }}">
+        <span class="input-group-addon">
+            <i class="glyphicon glyphicon-th"></i>
+        </span>
+    </div>
+    {% for prod_type, type_data in data %}
+    <h1>{{ prod_type.name }} </h1>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Inventory</th>
+                <th>Exp. Inventory</th>
+                <th>Real Cons.</th>
+                <th>Listed Cons.</th>
+                <th>Resulting Loss</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th>(Inventory)</th>
+                <th>(Ringe)</th>
+                <th>(listed - real) / listed</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for prod, inventory, expected, loss, listed, real, color in type_data %}
+            <tr class="calcfor">
+                <td class="name">
+                    {{ prod.name }}
+                </td>
+                <td>
+                    <input class="actual" name="inv-{{ prod.id }}" type="number" min="0" value="{{ inventory }}" />
+                </td>
+                <td class="supposedto">{{ expected }}</td>
+                <td>{{ real }}</td>
+                <td>{{ listed }}</td>
+                <td style="text-align: right; color: {{ color }}"><span class="percent" >{{ loss|floatformat:2 }}</span> %</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endfor %}
+    </form>
+
+    <table style="width: 100%;">
+    <tr>
+        <td>
+            <button class="btn btn-default" data-toggle="modal" data-target="#confirm-delete">
+                Delete
+            </button>
+
+        </td>
+        <td style="text-align: right">
+
+            <button style="margin-bottom: 10px" class="btn btn-primary" type="submit" form="inventory_form">Save</button>
+        </td>
+    </tr>
+
+    </table>
+{% endblock %}
+

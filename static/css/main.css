@@ -1,0 +1,44 @@
+
+.inline-form {
+    display: inline-block;
+}
+
+html, body {
+    height: 100%;
+}
+
+.footer-height {
+    height: 44px;
+    z-index: 1000;
+}
+
+#footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: white;
+    border-top: 1px #b4b4b4 solid;
+    right:0;
+}
+
+.footer-wrapper {
+    padding: 5px;
+}
+
+#product-wrapper {
+    text-align: center;
+}
+
+.product-button {
+    margin: 10px;
+    float: left;
+}
+
+.product-button > button {
+    min-height: 100px;
+}
+
+.product-button-one {
+    text-align: center;
+    min-width: 90px;
+}

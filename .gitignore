@@ -1,0 +1,5 @@
+venv/*
+*.csv
+.idea/*
+*.pyc
+db.sqlite3
