@@ -1,0 +1,57 @@
+{% extends "main.html" %}
+
+{% block content %}
+     <div id="product-wrapper">
+        {% for user in users %}
+            <button type="button" onclick="open_modal('{{ user.username }}')" class="btn btn-primary product-button-one">{{ user.username }}</button>
+
+        {% endfor %}
+    <!-- clear space for footer -->
+    <div class="footer-height" style="clear:both"></div>
+    </div>
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="login-modal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Login</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form class="modal-body" id="login-form" method="post">
+              {% csrf_token %}
+              <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" id="password" name="password" />
+              </div>
+              <input type="hidden" name="username" id="username" />
+          </form>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="submit_login()">Add</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+{% endblock %}
+
+{% block after_container %}
+
+{% endblock %}
+
+{% block header %}
+    <script>
+        function open_modal(user_name) {
+            $("#username").val(user_name);
+            $("#login-modal").modal();
+        }
+        function submit_login() {
+            $("#login-form").submit();
+
+        }
+    </script>
+
+{% endblock %}

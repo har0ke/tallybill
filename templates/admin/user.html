@@ -1,0 +1,59 @@
+{% extends "main.html" %}
+
+{% block content %}
+
+<form id="delete_form"  method="POST" style="display: none">
+    {% csrf_token %}
+    <input hidden name="delete"/>
+</form>
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Deleting Inventory
+            </div>
+            <div class="modal-body">
+                Do you really want to delete this User? This cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger" type="submit" form="delete_form">Delete</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="width: 100%">
+    <div style="max-width: 400px; margin: auto;">
+
+        <form id="product_form" method="POST">{% csrf_token %}
+            <h1>{{ obj.name }} </h1>
+            <div class="form-group">
+                <label for="usernameInput">Username</label>
+                <input name="username" type="text" class="form-control" id="usernameInput" placeholder="Username" value="{{ obj.username }}"/>
+                <label for="usernameInput">Email</label>
+                <input name="email" type="email" class="form-control" id="usernameInput" placeholder="Username" value="{{ obj.email }}"/>
+            </div>
+        </form>
+
+
+        <table style="width: 100%;">
+        <tr>
+            <td>
+                <button class="btn btn-default" data-toggle="modal" data-target="#confirm-delete">
+                    Delete
+                </button>
+
+            </td>
+            <td style="text-align: right">
+
+                <button style="margin-bottom: 10px" class="btn btn-primary" type="submit" form="product_form">Save</button>
+            </td>
+        </tr>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+

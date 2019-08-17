@@ -1,0 +1,178 @@
+{% extends "main.html" %}
+{% load filters %}
+
+{% block header %}
+    <style>
+        .total-column {
+            text-align: right;
+            white-space: nowrap;
+        }
+    </style>
+    <script>
+        $(function () {
+            $('.input-group.date').datepicker({
+                format: "dd.mm.yyyy",
+                language: "de"
+            });
+            recalc();
+            $('.order-row').find("input").change(recalc);
+        });
+
+        var new_id = -1;
+        function recalc() {
+            var all_total = 0;
+            var rows = $(".order-row");
+            var last_filled = -1;
+            rows.each(function(idx, item){
+                var total = $(item).find(".total-column")[0];
+                var each = $(item).find(".order-cent-each")[0].value;
+                var count = $(item).find(".order-count")[0].value;
+                item.style.backgroundColor = "";
+                if (each || count) {
+                    last_filled = idx;
+                }
+                if (!each || !count){
+                    item.style.backgroundColor = "#f0ad4e"
+                }
+                if(!each) each = "0";
+                if(!count) count = "0";
+                var tmp_total = parseInt(each) * parseInt(count) / 100.0;
+                all_total += tmp_total;
+                total.innerHTML = tmp_total.toFixed(2) + " €";
+
+            });
+            for(var i=0; i<rows.length; i++){
+                if (i == (last_filled + 1)){
+                    rows[i].style.backgroundColor = "#5cb85c"
+                }
+                if (i <= (last_filled + 1)) {
+                    rows[i].style.display = "table-row";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+            $("#all-total")[0].innerHTML = all_total.toFixed(2) + " €";
+        }
+
+    </script>
+
+{% endblock %}
+
+{% block content %}
+<form id="delete_form"  method="POST" style="display: none">
+    {% csrf_token %}
+    <input hidden name="delete"/>
+</form>
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Deleting Inventory
+            </div>
+            <div class="modal-body">
+                Do you really want to delete this Inventory? This cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger" type="submit" form="delete_form">Delete</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="in_inv_form" method="POST" style="max-width: 800px; margin: auto;">{% csrf_token %}
+    <h1>{{ obj.name }} </h1>
+    <table style="width:100%">
+        <tr>
+
+    <td class="form-group" style="padding-right: 10px">
+        <label for="order-invoice-id">Invoice ID</label>
+        <input maxlength="200" class="form-control" id="order-invoice-id"  name="invoice_id" value="{{ obj.invoice_id }}">
+    </td>
+    <td class="form-group" style="padding-left: 10px">
+        <label for="order-count">Date added to Inventory</label>
+        <div class="input-group date">
+          <input name="date" type="text" class="form-control" value="{{ obj.date|date:"d.m.Y" }}">
+            <span class="input-group-addon">
+                <i class="glyphicon glyphicon-th"></i>
+            </span>
+        </div>
+    </td>
+
+        </tr>
+
+    </table>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Produkt</th>
+                <th>Count</th>
+                <th>Cents Each (including tax)</th>
+                <th>Total</th>
+            </tr>
+
+        </thead>
+        <tbody>
+            {% for order in obj.order_set.all %}
+            <tr class="order-row" style="display: none;">
+                <td>
+                    <select class="form-control" id="order-product" name="product/{{ order.pk }}">
+                    {% for p in products %}
+                        <option {% if p.pk == order.product_id %}selected{% endif %} value="{{ p.id }}">{{ p.name }}</option>
+                    {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" class="form-control order-count" id=""  name="count/{{ order.pk }}" value="{{ order.count }}">
+                </td>
+                <td>
+                    <input type="number" class="form-control order-cent-each" id=""  name="each_cents/{{ order.pk }}" value="{{ order.each_cents }}">
+                </td>
+                <td class="total-column">0.00 €</td>
+            </tr>
+            {% endfor %}
+            {% for order in range %}
+            <tr class="order-row" style="display: none;">
+                <td>
+                    <select class="form-control" id="order-product" name="product/{{ order.pk }}">
+                    {% for p in products %}
+                        <option {% if p.pk == order.product_id %}selected{% endif %} value="{{ p.id }}">{{ p.name }}</option>
+                    {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" class="form-control order-count" id=""  name="count/{{ order.pk }}" value="{{ order.count }}">
+                </td>
+                <td>
+                    <input type="number" class="form-control order-cent-each" id=""  name="each_cents/{{ order.pk }}" value="{{ order.each_cents }}">
+                </td>
+                <td class="total-column">0.00 €</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td></td>
+                <td></td>
+                <td style="text-align: right; font-weight: bold">Total:</td>
+                <td class="total-column" id="all-total">0.00 €</td>
+            </tr>
+        </tbody>
+    </table>
+    </form>
+
+
+    <table style="width: 100%;max-width: 800px;margin: auto;">
+    <tr>
+        <td>
+            <button class="btn btn-default" data-toggle="modal" data-target="#confirm-delete">
+                Delete
+            </button>
+
+        </td>
+        <td style="text-align: right">
+
+            <button style="margin-bottom: 10px" class="btn btn-primary" type="submit" form="in_inv_form">Save</button>
+        </td>
+    </tr>
+{% endblock %}
+

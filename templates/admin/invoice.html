@@ -1,0 +1,134 @@
+{% extends "main.html" %}
+{% load filters %}
+{% load humanize %}
+{% block content %}
+    {% if invoice.is_temporary %}
+
+    <div class="modal fade" id="confirm-submit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    Submit Invoice
+                </div>
+                <div class="modal-body">
+                    Do you really want to submit this invoice? This cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-warning" type="submit" form="invoice_submit_form">Submit</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+        <button style="float: right;" data-toggle="modal" data-target="#confirm-submit" class="button btn-warning" type="submit">Submit Changes</button>
+
+    <form id="invoice_submit_form" method="POST"> {% csrf_token %}
+        <input hidden name="action" value="freeze"/>
+    </form>
+    {% endif %}
+    <h2>Abrechnung {{ date }}</h2>
+    <div style="height: 10px"></div>
+    <div style="text-align: center">
+        <nav style="margin: auto" aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% for i in invoices %}
+                    <li class="page-item {% if i == date %} active {% endif %}"><a class="page-link"
+										   href="{{ base_url }}invoice/{{ i|asrepr }}/">
+                        {{ i|date_to_str }}</a></li>
+                {% endfor %}
+            </ul>
+        </nav>
+        <select onchange="location = this.value">
+            {% for i in invoice_chain %}
+                {% if i.is_temporary %}
+                    <option value="{{ base_url }}invoice/{{ invoice.inventory.date|asrepr }}/{{ i.pk }}" {% if i == invoice %}selected{% endif %}>
+                        temporary - {{ i.total_euro|floatformat:2|intcomma }} €
+                    </option>
+
+                {% else %}
+                    <option value="{{ base_url }}invoice/{{ invoice.inventory.date|asrepr }}/{{ i.pk }}" {% if i == invoice %}selected{% endif %}>
+
+                        {{ i.date|datetime_to_str }} - {{ i.total_euro|floatformat:2|intcomma }} €
+                    </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </div>
+    <div style="float: right; padding: 20px 0">
+        {% if invoice.correction_of != None %}
+            <a target="_blank" href="{{ base_url }}invoice_csv/{{ invoice.pk }}/?difference">download csv (difference only)</a>
+            <br>
+        {% endif %}
+        <a target="_blank" href="{{ base_url }}invoice_csv/{{ invoice.pk }}">download csv (total amount)</a>
+    </div>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Total</th>
+            {% for name in names %}
+                <th class="text-right">{{ name }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th>Preis</th>
+            <td></td>
+            {% for name, name2 in price_each %}
+                <td class="text-right" style="white-space: nowrap;">
+                    {% if name2 != None %}
+                        <div class="text-right" style="white-space: nowrap;">{{ name2|floatformat:2|intcomma }} €</div>
+                    {% endif %}
+                    <span style="{% if name2 != None %}font-size: 10px{% endif %}">
+                        {{ name|floatformat:2|intcomma }} €
+                    </span>
+                </td>
+
+            {% endfor %}
+        </tr>
+        <tr>
+            <th>Total</th>
+            {% for t in total %}
+                <td class="text-right" style="white-space: nowrap;">{{ t|floatformat:2|intcomma }} €</td>
+            {% endfor %}
+        </tr>
+        <tr>
+
+            <th>Schwund</th>
+            <td></td>
+            {% for loss, color, loss2, color2 in losses %}
+                <td class="text-right" style="color: {{ color }};white-space: nowrap;">
+                    {% if loss2 != None %}
+                        <div class="text-right" style="color: {{ color2 }};white-space: nowrap;">{{ loss2|floatformat:2|intcomma }}%</div>
+                    {% endif %}
+                    <span style="{% if loss2 != None %}font-size: 10px{% endif %}">{{ loss|floatformat:2|intcomma }}%</span>
+                </td>
+
+            {% endfor %}
+        </tr>
+        </tbody>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Total</th>
+            {% for name in names %}
+                <th class="text-right">{{ name }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr>
+                {% for i in user %}
+                    <td
+                            {% if not forloop.first %}class="text-right"{% endif %} style="white-space: nowrap;">
+                        {% if not forloop.first %}{{ i|floatformat:2|intcomma }} €{% else %}{{ i }}{% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

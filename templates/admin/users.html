@@ -1,0 +1,22 @@
+{% extends "main.html" %}
+
+{% load filters %}
+{% load humanize %}
+{% block content %}
+    <table style="width: 100%;">
+        <tr>
+            <td>
+                <h1>Users</h1>
+            </td>
+            <td style="text-align: right;">
+		    <a href="{{ base_url }}user/"><span class="glyphicon glyphicon-plus"></span></a>
+            </td>
+        </tr>
+    </table>
+
+    <div class="list-group">
+        {% for p in users %}
+	<a href="{{ base_url }}user/{{ p.id }}" class="list-group-item list-group-item-action">{{ p.username }}</a>
+        {% endfor %}
+    </div>
+{% endblock %}

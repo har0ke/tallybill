@@ -1,0 +1,48 @@
+{% extends "main.html" %}
+{% load filters %}
+{% load humanize %}
+
+{% block content %}
+    <style>
+    .collapse {
+        margin-bottom: -1px;
+    }
+    .collapse-wrapper {
+        padding-left: 40px;
+
+    }
+    .inner-collapse.list-group-item.list-group-item-action {
+        background-color: #F5f5f5;
+        border-bottom-right-radius: 0px;
+        border-bottom-left-radius: 0px;
+        border-top-left-radius: 0px;
+        border-top-right-radius: 0px;
+    }
+    </style>
+
+    <h1>Invoice List</h1>
+    <div class="list-group">
+        {% for invoice in invoices  %}
+	<a href="{{ base_url }}invoice/{{ invoice.inventory.date|asrepr }}"
+               class="list-group-item list-group-item-action"
+                 data-toggle="collapse"
+          data-target="#collapsed-{{ invoice.pk }}"
+               {% if invoice.differences_to_approve %}style="color: red"{% endif %}>
+                {{ invoice.inventory.date }} {% if invoice.differences_to_approve %} (changed {{ invoice.diff_euro|floatformat:2|intcomma }} €) {% endif %}
+                <span style="float: right;">{{ invoice.total_euro|floatformat:2|intcomma }} €</span>
+            </a>
+            <!--<div id="collapsed-{{ invoice.pk }}" class="collapse-wrapper collapse">
+            {% for corr_invoice in invoice.correction_of_iterator %}
+                {% if corr_invoice.diff_euro != 0 %}
+		<a  href="{{ base_url }}invoice/{{ invoice.inventory.date|asrepr }}"
+                       class="inner-collapse list-group-item list-group-item-action">
+                        {{ corr_invoice.date }}
+                        <span style="float: right;">{{ corr_invoice.diff_euro|floatformat:2|intcomma }} €</span>
+
+                    </a>
+                {% endif %}
+            {% endfor %}
+            </div>-->
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="/static/css/bootstrap.css" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/static/css/main.css">
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"
+            integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh"
+            crossorigin="anonymous"></script>
+    <script src="/static/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"
+            crossorigin="anonymous"></script>
+    <script src="/static/js/jquery-cookie/src/jquery.cookie.js"></script>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
+
+	<link rel="icon" href="/static/img/icon32.png" sizes="32x32" />
+    <script src="/static/js/main.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    {% block title %}<title>{{ title }}</title>{% endblock %}
+    {% block header %}{% endblock %}
+</head>
+
+<body>
+<!-- Static navbar -->
+<nav class="navbar navbar-default navbar-static-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+	    <a class="navbar-brand" href="{{ base_url }}">
+            <img style="float: left" src="/static/img/icon64.png" width="20" height="20" class="d-inline-block align-top" alt="">
+            <span style="margin-left: 5px">Tallybill</span>
+        </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+
+
+                {% if logged_in.is_staff %}
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Admin
+                            <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+				<li><a href="{{ base_url }}invoices/">Invoice List</a></li>
+				<li><a href="{{ base_url }}create_consumtions/">Consumptions</a></li>
+				<li><a href="{{ base_url }}incoming_invoices/">Incoming Invoices</a></li>
+				<li><a href="{{ base_url }}inventories/">Inventory</a></li>
+				<li><a href="{{ base_url }}products/">Products</a></li>
+				<li><a href="{{ base_url }}users/">Users</a></li>
+                        </ul>
+                      </li>
+
+                {% endif %}
+                {% if logged_in.id != None %}
+                <li class="nav-item">
+			<a class="nav-link" href="{{ base_url }}charts/">Charts</a>
+                </li>
+                <li class="nav-item">
+			<a class="nav-link" href="{{ base_url }}consumptions/">Verbrauch</a>
+                </li>
+                <li class="nav-item">
+			<a class="nav-link" href="{{ base_url }}user_invoices/">Abrechnungen</a>
+                </li>
+                <li class="nav-item">
+			<a class="nav-link" href="{{ base_url }}logout/">Logout ({{ logged_in.username }}) </a>
+                </li>
+                {% endif %}
+                {% if logged_in.id == None %}
+                <li class="nav-item">
+			<a class="nav-link" href="{{ base_url}}invoices/">Admin</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+
+<!-- content -->
+<div class="container" id="main-container">
+{% if success %}
+    <div id="success-alert" class="alert alert-success" role="alert">
+      <span class="glyphicon glyphicon-check" aria-hidden="true"></span>
+      <span class="sr-only">Success:</span>
+      {{ success }}
+    </div>
+    <script>
+        $(function () {
+            window.setTimeout(function(){
+                // TODO: fadeout...
+                $("#success-alert").remove()
+            }, 1000);
+        })
+    </script>
+{% endif %}
+
+{% if error %}
+    <div id="success-alert" class="alert alert-danger" role="alert">
+      <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+      <span class="sr-only">Success:</span>
+      {{ error }}
+    </div>
+    <script>
+        $(function () {
+            window.setTimeout(function(){
+                // TODO: fadeout...
+                $("#success-alert").remove()
+            }, 1000);
+        })
+    </script>
+{% endif %}
+    {% if breadcrumbs != None %}
+
+        <ol class="breadcrumb">
+            {% for url, name in breadcrumbs %}
+                {% if forloop.last %}
+                    <li class="active">{{ name }}</li>
+                {% else %}
+                    <li><a href="{{ url }}">{{ name }}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    {% endif %}
+    {% block content %}{% endblock %}
+</div>
+{% block after_container %}{% endblock %}
+</body>
+</html>

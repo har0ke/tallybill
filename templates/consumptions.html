@@ -1,0 +1,77 @@
+{% extends "main.html" %}
+{% load filters %}
+
+{% block content %}
+    <h2>Verbrauch</h2>
+    <canvas id="schwund" width="400" height="200"></canvas>
+    <h2>Von anderen angerechnet</h2>
+    <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Produkt</th>
+                    <th>Anzahl</th>
+                    <th>Datum</th>
+                    <th>User</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in detailed_cons %}
+                    <tr>
+                        <td>{{ i.product.name }}</td>
+                        <td>{{ i.count }}</td>
+                        <td>{{ i.date }}</td>
+                        <td>{{ i.issued_by }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+    </table>
+
+
+    <script>
+        var ctx = document.getElementById("schwund").getContext('2d');
+        var schwundChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                selection: {
+                    enable: true
+                },
+                labels: {{ labels_json|safe }},
+                datasets: [
+                    {% for cs in consumptions %}
+                    {
+                        backgroundColor: ["#3e95cd", "#8e5ea2","#3cba9f","#e8c3b9","#c45850"][{{ forloop.counter0 }}],
+                        label: "{{ cs.0 }}",
+                        data: {{ cs.1|safe }},
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+
+                ]
+            },
+            options: {
+                scales: {
+                        xAxes: [{
+                            stacked: true
+                        }],
+                        yAxes: [{
+                            stacked: true
+                        }]
+                }
+            }
+        });
+
+
+        $("#schwund").click(
+            function(evt){
+                console.log(evt.label)
+                var activePoints = schwundChart.getElementAtEvent(evt);
+                if (activePoints.length > 0) {
+                    var url = "/invoice/" + activePoints[0]._model.label + "/";
+                    window.location = url;
+                }
+            }
+        );
+
+    </script>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "main.html" %}
+{% load filters %}
+
+{% block content %}
+    <h2>Abweichung von Inventur</h2>
+    <canvas id="schwund" width="400" height="200"></canvas>
+    <h2>Gewinn</h2>
+    <canvas id="gewinn" width="400" height="200"></canvas>
+
+
+    <script>
+        var ctx = document.getElementById("schwund").getContext('2d');
+        var schwundChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                selection: {
+                    enable: true
+                },
+                labels: {{ labels_json|safe }},
+                datasets: [
+                    {% for cs in losses_json %}
+                    {
+                        backgroundColor: ["#3e95cd", "#8e5ea2","#3cba9f","#e8c3b9","#c45850"][{{ forloop.counter0 }}],
+                        label: "{{ cs.0 }}",
+                        data: {{ cs.1|safe }},
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+
+                ]
+            },
+            options: {
+                scales: {
+                        xAxes: [{
+                            stacked: true
+                        }],
+                        yAxes: [{
+                            stacked: true
+                        }]
+                }
+            }
+        });
+
+
+        $("#schwund").click(
+            function(evt){
+                console.log(evt.label)
+                var activePoints = schwundChart.getElementAtEvent(evt);
+                if (activePoints.length > 0) {
+                    var url = "/invoice/" + activePoints[0]._model.label + "/";
+                    window.location = url;
+                }
+            }
+        );
+
+        ctx = document.getElementById("gewinn").getContext('2d');
+        var gewinnChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                selection: {
+                    enable: true
+                },
+                labels: {{ labels_json|safe }},
+                datasets: [{
+                    label: '€ Gewinn',
+                    data: {{ gewinn_json|safe }},
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255,99,132,1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+        $("#gewinn").click(
+            function(evt){
+                console.log(evt.label)
+                var activePoints = gewinnChart.getElementAtEvent(evt);
+                if (activePoints.length > 0) {
+                    var url = "/invoice/" + activePoints[0]._model.label + "/";
+                    window.location = url;
+                }
+            }
+        );
+    </script>
+{% endblock %}

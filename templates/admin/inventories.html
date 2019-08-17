@@ -1,0 +1,22 @@
+{% extends "main.html" %}
+
+{% load filters %}
+{% load humanize %}
+{% block content %}
+    <table style="width: 100%;">
+        <tr>
+            <td>
+                <h1>Inventories</h1>
+            </td>
+            <td style="text-align: right;">
+		    <a href="{{ base_url }}inventory/"><span class="glyphicon glyphicon-plus"></span></a>
+            </td>
+        </tr>
+    </table>
+
+    <div class="list-group">
+        {% for d, c in date_n_counts %}
+	<a href="{{ base_url }}inventory/{{ d|asrepr }}" class="list-group-item list-group-item-action">{{ d }} <span style="float: right;">{{ c }} Einheiten</span> </a>
+        {% endfor %}
+    </div>
+{% endblock %}

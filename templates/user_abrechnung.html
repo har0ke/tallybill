@@ -1,0 +1,52 @@
+{% extends "main.html" %}
+
+{% load filters %}
+{% load humanize %}
+{% block content %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                    <th>Product</th>
+                    <th class="text-right" >Each</th>
+                    <th class="text-right" >Count</th>
+                    <th class="text-right" >Total</th>
+                    <th class="text-right" >Loss</th>
+            </tr>
+        </thead>
+        <tbody>
+    {% for d, date in dates %}
+            <tr>
+                <th colspan="5">{{ d }}</th>
+            </tr>
+        {% for prod, price, count, total, loss, color in date %}
+            <tr>
+                <td style="white-space: nowrap;">{{ prod }}</td>
+                <td class="text-right" style="white-space: nowrap;">{{ price|floatformat:2|intcomma }} €</td>
+                <td class="text-right" style="white-space: nowrap;">{{ count }}</td>
+                <td class="text-right" style="white-space: nowrap;">{{ total|floatformat:2|intcomma }} €</td>
+                <td class="text-right" style="color: {{ color }};white-space: nowrap;">{{ loss|floatformat:2|intcomma }}%</td>
+
+            </tr>
+        {% endfor %}
+    {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block after_container %}
+
+{% endblock %}
+
+{% block header %}
+    <script>
+        function open_modal(user_name) {
+            $("#username").val(user_name);
+            $("#login-modal").modal();
+        }
+        function submit_login() {
+            $("#login-form").submit();
+
+        }
+    </script>
+
+{% endblock %}
