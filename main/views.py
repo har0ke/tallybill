@@ -95,11 +95,14 @@ def admin_invoice_detailed(request, invoice_date=None, pk=None):
         product_price = ((i / 100., None) for i in product_price)
         product_loss = ((loss, get_loss_color(loss), None, None) for loss in product_loss)
     else:
-        invoice_table, product_ids, product_names, product_loss, product_price = \
+        invoice_table_diff, product_ids_diff, product_names_diff, product_loss, product_price = \
             subtract_invoices(invoice.correction_of, invoice)
         # for now only display total amounts (override differences)
         invoice_table, product_ids, product_names, _, _ = get_invoice_data(invoice)
-        product_price = ((i / 100., i2 / 100.) for i, i2 in product_price)
+        product_loss = [product_loss[product_ids_diff.index(id_)] for id_ in product_ids]
+        product_price = [product_price[product_ids_diff.index(id_)] for id_ in product_ids]
+
+        product_price = ((None if i is None else i / 100., None if i2 is None else i2 / 100.) for i, i2 in product_price)
         product_loss = ((loss, get_loss_color(loss), loss2, get_loss_color(loss2)) for loss, loss2 in product_loss)
 
     # fetch current and nearby invoice
