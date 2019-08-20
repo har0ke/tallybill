@@ -124,7 +124,10 @@ def admin_invoice_detailed(request, invoice_date=None, pk=None):
 
 @login_required
 def schwund_charts(request):
-    dates, profits = zip(*OutgoingInvoice.objects.all().order_by("inventory__date").values_list("inventory__date", "profit"))
+    if OutgoingInvoice.objects.count() != 0:
+        dates, profits = zip(*OutgoingInvoice.objects.all().order_by("inventory__date").values_list("inventory__date", "profit"))
+    else:
+        dates, profits = [], []
     pnn = Product.objects.values_list("pk", "name")
     products, pnames = zip(*pnn)
     id_to_pname = dict(pnn)
@@ -217,7 +220,10 @@ def select_product(request):
 def user_invoices(request):
     dates_new = {}
 
-    latest_inv_pk, latest_inv_date = list(zip(*list(OutgoingInvoice.objects.values_list("pk", "date"))))
+    if OutgoingInvoice.objects.count() != 0:
+        latest_inv_pk, latest_inv_date = list(zip(*list(OutgoingInvoice.objects.values_list("pk", "date"))))
+    else:
+        latest_inv_pk, latest_inv_date = [], []
 
     for position in (OutgoingInvoiceProductUserPosition.objects
                      .filter(user=request.user, productinvoice__invoice__in=latest_inv_pk)
