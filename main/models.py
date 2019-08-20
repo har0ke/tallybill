@@ -77,7 +77,10 @@ class InvoiceDependencies(object):
 
     def set_may_have_changed(self, kwargs):
         inventory_ids = set([i.pk for i in self.get_related_invoices() if i])
-        Inventory.objects.filter(pk__in=inventory_ids, may_have_changed=False).update(may_have_changed=True)
+        if inventory_ids:
+            if settings.DEBUG:
+                print("May have changed: " + str(inventory_ids))
+            Inventory.objects.filter(pk__in=inventory_ids, may_have_changed=False).update(may_have_changed=True)
 
     def delete(self, *args, **kwargs):
         assert isinstance(self, models.Model) and isinstance(self, InvoiceDependencies)

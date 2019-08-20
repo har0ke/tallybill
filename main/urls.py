@@ -1,14 +1,22 @@
+import trace
+import traceback
 from datetime import datetime
 from django.conf.urls import url
 
+from tallybill import settings
 from . import views
 
 
 def time_measure(view):
     def _wrapper(*args, **kwargs):
         b = datetime.now()
-        ret = view(*args, **kwargs)
-        print("View '%s' took %.2fms" % (view.__name__, (datetime.now() - b).total_seconds() * 1000.))
+        try:
+            ret = view(*args, **kwargs)
+        except Exception as e:
+            print(traceback.format_exc(100, e))
+            raise e
+        if settings.DEBUG:
+            print("View '%s' took %.2fms" % (view.__name__, (datetime.now() - b).total_seconds() * 1000.))
         return ret
 
     return _wrapper
