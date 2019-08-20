@@ -1,21 +1,21 @@
 import datetime
-import inspect
 from time import sleep
 from urllib import parse
 
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.core.servers.basehttp import WSGIServer
-from django.test.testcases import LiveServerThread, QuietWSGIRequestHandler
-from selenium.webdriver.chrome.webdriver import WebDriver
-from selenium.webdriver.common.by import By
+from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
 
 from main.billing import BillingPeriod, RecalculateThread
 from main.models import Product, ProductType, IncomingInvoice, Order, Consumption, Inventory, ProductInventory, \
     OutgoingInvoice, OutgoingInvoiceProductUserPosition, OutgoingInvoiceProductPosition, UserExtension
+
+HEADLESS = True
+
+FIREFOX = "firefox"
+CHROME = "chrome"
+driver = FIREFOX
 
 
 class TestCaseData1(object):
@@ -71,12 +71,6 @@ class TestCaseData1(object):
         invoice.inventory.save()
 
 
-class LiveServerSingleThread(LiveServerThread):
-    """Runs a single threaded server rather than multi threaded. Reverts https://github.com/django/django/pull/7832"""
-
-    def _create_server(self):
-        return WSGIServer((self.host, self.port), QuietWSGIRequestHandler, allow_reuse_address=False)
-
 def replace_input_value(web_element, value):
     web_element.send_keys(Keys.CONTROL + "a")
     web_element.send_keys(value)
@@ -84,12 +78,24 @@ def replace_input_value(web_element, value):
 
 class CoverageTest(StaticLiveServerTestCase):
 
-    # server_thread_class = LiveServerSingleThread
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.selenium = WebDriver()
+
+        if driver == CHROME:
+            options = webdriver.ChromeOptions()
+            if HEADLESS:
+                options.add_argument("--headless")
+                options.add_argument("--disable-gpu")
+            cls.selenium = webdriver.Chrome(chrome_options=options)
+        elif driver == FIREFOX:
+            options = webdriver.FirefoxOptions()
+            profile = webdriver.FirefoxProfile()
+            if HEADLESS:
+                options.add_argument('-headless')
+            profile.set_preference("browser.helperApps.neverAsk.saveToDisk", "text/csv")
+            cls.selenium = webdriver.Firefox(firefox_options=options, firefox_profile=profile)
+
         cls.selenium.implicitly_wait(2)
 
     @classmethod
@@ -98,8 +104,6 @@ class CoverageTest(StaticLiveServerTestCase):
         super().tearDownClass()
 
     def setUp(self):
-        self.recalculate_thread = RecalculateThread()
-        self.recalculate_thread.start()
 
         self.scenario_data = TestCaseData1()
 
@@ -109,9 +113,13 @@ class CoverageTest(StaticLiveServerTestCase):
         password_input = self.selenium.find_element_by_name("password")
         password_input.send_keys('1234')
         self.selenium.find_element_by_xpath('//input[@value="Log in"]').click()
+
         self.wait_for_page()
 
         self.assertEqual(parse.urlparse(self.selenium.current_url).path, "/")
+
+        self.recalculate_thread = RecalculateThread()
+        self.recalculate_thread.start()
 
     def tearDown(self):
         self.recalculate_thread.running = False
@@ -244,7 +252,6 @@ class CoverageTest(StaticLiveServerTestCase):
         self.selenium.find_element_by_xpath("//input[@name='each_cents/%d']" % order_id).send_keys(Keys.DELETE)
 
         self.selenium.find_element_by_xpath('//button[text()="Save"]').send_keys(Keys.NULL)
-        #sleep()
         self.selenium.find_element_by_xpath('//button[text()="Save"]').click()
         self.wait_for_page()
 
@@ -330,7 +337,7 @@ class CoverageTest(StaticLiveServerTestCase):
         self.selenium.find_element_by_xpath('//button[text()="Save"]').click()
         self.wait_for_page()
 
-        sleep(1)  # time to recalculate
+        sleep(2)  # time to recalculate
 
         self.selenium.get('%s%s' % (self.live_server_url, '/inventories/'))
         self.wait_for_page()
@@ -339,8 +346,12 @@ class CoverageTest(StaticLiveServerTestCase):
         self.assertEqual(len(self.get_simple_list_text()), 2)
 
         self.selenium.find_elements_by_class_name("list-group-item")[0].click()
-        for csv_a in self.selenium.find_elements_by_xpath('//a[@target="_blank"]'):
-            self.selenium.get(csv_a.get_attribute("href"))
+
+        csv_links = self.selenium.find_elements_by_xpath('//a[@target="_blank"]')
+        self.assertEqual(2, len(csv_links))
+        for csv in csv_links:
+            csv.click()
+
         self.selenium.find_element_by_xpath("//button[text()='Submit Changes']").click()
         self.selenium.find_element_by_xpath("//button[text()='Submit']").click()
         self.assertEqual(len(self.selenium.find_elements_by_xpath("//button[text()='Submit Changes']")), 0)
