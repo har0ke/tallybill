@@ -169,7 +169,7 @@ def user_consumptions(request):
         "labels_json": [str(d) for d in dates_new],
         "consumptions": consumptions_new,
         "products": Product.objects.all(),
-        "detailed_cons": Consumption.objects.filter(user=user).exclude(issued_by=user).order_by("-date")
+        "detailed_cons": Consumption.objects.filter(user=user).order_by("-date")
     }, "Consumptions, %s" % request.user.username))
 
 
