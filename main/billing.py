@@ -223,8 +223,6 @@ class ProductInPeriod(object):
                                             .productinventory_set.get(product=self._product).count)
             except ProductInventory.DoesNotExist as e:
                 pass
-        if self._billing_period.date_from is None:
-            return 0
 
         inventory_count = 0
         try:
@@ -244,9 +242,8 @@ class ProductInPeriod(object):
 
     def get_listed_consumptions(self):
         assert isinstance(self._product, Product)
-        if self._billing_period.date_from is None:
-            return 0
-        return (self._product.consumption_set.filter(date__gt=self._billing_period.date_from,
+        date_from = datetime.min if self._billing_period.date_from is None else self._billing_period.date_from
+        return (self._product.consumption_set.filter(date__gt=date_from,
                                                      date__lte=self._billing_period.date_until)
                 .aggregate(Sum("count"))["count__sum"] or 0)
 
@@ -254,9 +251,9 @@ class ProductInPeriod(object):
         # avg price of products that where consumed
         # i assumed a product really is a single product
         # TODO bissl umstaendlich umgesetzt
-        if self._billing_period.date_from is None:
-            return 0
-        consumed_before_period = _get_total_consumption_until(self._product, self._billing_period.date_from)
+
+        date_from = datetime.min if self._billing_period.date_from is None else self._billing_period.date_from
+        consumed_before_period = _get_total_consumption_until(self._product, date_from)
 
         real_consumptions = max(self.get_real_consumption(), 0)
 
@@ -304,9 +301,8 @@ class ProductInPeriod(object):
             return -math.inf
 
     def get_user_consumptions(self, user=None):
-        if self._billing_period.date_from is None:
-            return []
-        consumptions = Consumption.objects.filter(date__gt=self._billing_period.date_from,
+        date_from = datetime.min if self._billing_period.date_from is None else self._billing_period.date_from
+        consumptions = Consumption.objects.filter(date__gt=date_from,
                                                   date__lte=self._billing_period.date_until, product=self._product)
         if user is not None:
             consumptions = consumptions.filter(user=user)
@@ -317,9 +313,13 @@ class ProductInPeriod(object):
 
 class RecalculateThread(Thread):
 
+    def __init__(self, *args, **kwargs):
+        super(RecalculateThread, self).__init__(*args, **kwargs)
+        self.running = True
+
     def run(self):
         print("Started Recalculation Thread.")
-        while True:
+        while self.running:
             try:
                 inventories = Inventory.objects.filter(may_have_changed=True)
                 for inventory in inventories:
@@ -331,6 +331,7 @@ class RecalculateThread(Thread):
                 traceback.print_exc()
             time.sleep(1.0)
 
+        print("End Recalculation Thread.")
 
 def outgoing_to_csv(outgoing, f, difference=False):
 
