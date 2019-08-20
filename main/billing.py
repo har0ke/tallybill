@@ -375,8 +375,16 @@ def outgoing_to_csv(outgoing, f, difference=False):
     writer.writerow(["Getränke.Erträge", sum / 100.0])
     print(outgoing.inventory.date, sum / 100.)
 
-# TODO: don't do this here in production mode...
-recalculate_thread = RecalculateThread()
-recalculate_thread.daemon = True
-recalculate_thread.start()
+
+import sys
+is_runserver_command = False
+for idx, value in enumerate(sys.argv):
+    if value.endswith("manage.py"):
+        is_runserver_command = sys.argv[idx + 1] == "runserver"
+        break
+
+if is_runserver_command:
+    recalculate_thread = RecalculateThread()
+    recalculate_thread.daemon = True
+    recalculate_thread.start()
 
