@@ -144,8 +144,8 @@ class Inventory(InvoiceDependencies, models.Model, FieldTrackerMixin):
     may_have_changed = models.BooleanField(default=True)
 
     def get_related_invoices(self):
-        next_inventory = Inventory.get_next_inventory_by_date(self.date, True)
-        return (([Inventory.get_next_inventory_by_date(self.date_original, True)] if self.date_changed else []) +
+        next_inventory = Inventory.get_next_inventory_by_date(self.date, False)
+        return (([Inventory.get_next_inventory_by_date(self.date_original, False)] if self.date_changed else []) +
                 [self, next_inventory])
 
     @staticmethod
