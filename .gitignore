@@ -3,3 +3,6 @@ venv/*
 .idea/*
 *.pyc
 db.sqlite3
+geckodriver.log
+htmlcov/*
+.coverage
