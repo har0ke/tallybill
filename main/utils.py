@@ -26,6 +26,8 @@ def parse_date(date_str):
 
 
 def get_loss_color(loss):
+    if loss is None:
+        return "green"
     return ("red" if abs(loss) > LOSS_ERROR_LEVEL * 100 else
             ("orange" if abs(loss) > LOSS_WARN_LEVEL * 100 else "green"))
 
