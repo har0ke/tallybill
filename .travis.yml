@@ -1,0 +1,35 @@
+language: python
+python:
+  - "3.6"
+
+env:
+  global:
+    - MOZ_HEADLESS=1
+
+addons:
+  firefox: latest-nightly
+  chrome: stable
+
+
+before_install:
+  - wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/2.40/chromedriver_linux64.zip
+  - mkdir $HOME/chromedriver && unzip /tmp/chromedriver.zip -d $HOME/chromedriver
+  - export PATH=$HOME/chromedriver:$PATH
+  - wget -O /tmp/geckodriver.tar.gz https://github.com/mozilla/geckodriver/releases/download/v0.23.0/geckodriver-v0.23.0-linux64.tar.gz
+  - mkdir $HOME/geckodriver && tar xvf /tmp/geckodriver.tar.gz -C $HOME/geckodriver
+  - export PATH=$HOME/geckodriver:$PATH
+  - firefox --version
+  - geckodriver --version
+
+
+install:
+  - pip install -r requirements.txt
+  - pip install -r devel-requirements.txt
+
+script:
+  - coverage3 run --omit="./main/migrations/*"  --include="./main/*","./tallybill/*" ./manage.py test
+
+
+after_success:
+  - pip install coveralls
+  - coveralls

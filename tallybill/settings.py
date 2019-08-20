@@ -86,6 +86,9 @@ DATABASES = {
             'timeout': 20,  # in seconds
             # see also
             # https://docs.python.org/3.7/library/sqlite3.html#sqlite3.connect
+        },
+        'TEST': {
+            'NAME': 'testdb.sqlite3',
         }
     }
 }
