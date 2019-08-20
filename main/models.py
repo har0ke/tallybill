@@ -1,4 +1,6 @@
 from datetime import datetime
+
+import pytz
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Transform, F
@@ -6,6 +8,16 @@ from django.db.models.base import ModelBase
 from django.db.models.query_utils import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+from tallybill import settings
+
+
+def datetime_now_tz():
+    return datetime.now(tz=pytz.timezone(settings.TIME_ZONE))
+
+
+def date_now():
+    return datetime_now_tz().date()
 
 
 def FilteredManager(query):
@@ -128,7 +140,7 @@ class Product(models.Model):
 
 class Inventory(InvoiceDependencies, models.Model, FieldTrackerMixin):
     track_fields = ["date"]
-    date = models.DateField(default=datetime.now, unique=True)
+    date = models.DateField(default=date_now, unique=True)
     may_have_changed = models.BooleanField(default=True)
 
     def get_related_invoices(self):
@@ -168,7 +180,7 @@ class ProductInventory(InvoiceDependencies, models.Model, FieldTrackerMixin):
 
 class IncomingInvoice(InvoiceDependencies, FieldTrackerMixin, models.Model):
     # to verify every invoice is input correctly
-    date = models.DateField(default=datetime.now)
+    date = models.DateField(default=date_now)
     invoice_id = models.CharField(max_length=200)
 
     track_fields = ["date"]
@@ -198,7 +210,7 @@ class Consumption(InvoiceDependencies, models.Model, FieldTrackerMixin):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     count = models.PositiveIntegerField()
-    date = models.DateField(default=datetime.now)
+    date = models.DateField(default=date_now)
     issued_by = models.ForeignKey(User, on_delete=models.CASCADE,
                                   related_name="issued_consumption")
     track_fields = ["date"]
@@ -215,7 +227,7 @@ class OutgoingInvoice(models.Model):
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE)
     # OutgoingInvoice.date: the date invoice was issued
     # use inventory.date for billing period
-    date = models.DateTimeField(default=datetime.now)
+    date = models.DateTimeField(default=datetime_now_tz)
     total = models.IntegerField(default=0)
     profit = models.IntegerField(default=0)
 
