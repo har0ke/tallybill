@@ -30,11 +30,7 @@ def get_loss_color(loss):
             ("orange" if abs(loss) > LOSS_WARN_LEVEL * 100 else "green"))
 
 
-def _identity(*x):
-    return x
-
-
-def merge_sorted(a, b, missing=_identity, inserted=_identity, kept=_identity):
+def merge_sorted(a, b, missing, inserted, kept):
     def _next(iterator):
         try:
             return next(iterator)
