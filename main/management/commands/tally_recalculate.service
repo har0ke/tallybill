@@ -1,0 +1,14 @@
+[Unit]
+Description=Tallybill Recalculate Service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User={user}
+ExecStart=bash {proj}/scripts/tally_recalculate.sh {venv} {proj}
+
+[Install]
+WantedBy=multi-user.target
