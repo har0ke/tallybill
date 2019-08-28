@@ -27,7 +27,7 @@ install:
   - pip install -r devel-requirements.txt
 
 script:
-  - coverage3 run --omit="./main/migrations/*"  --include="./main/*","./tallybill/*" ./manage.py test
+  - coverage3 run --omit="./main/migrations/*,./main/management/*"  --include="./main/*","./tallybill/*" ./manage.py test
 
 
 after_success:
