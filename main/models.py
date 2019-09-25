@@ -226,7 +226,10 @@ class Consumption(InvoiceDependencies, models.Model, FieldTrackerMixin):
                 [Inventory.get_next_inventory_by_date(self.date, True)])
 
 
-class OutgoingInvoice(models.Model):
+class OutgoingInvoice(models.Model, FieldTrackerMixin):
+
+    track_fields = ["is_frozen"]
+
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE)
     # OutgoingInvoice.date: the date invoice was issued
     # use inventory.date for billing period
@@ -288,6 +291,11 @@ class OutgoingInvoice(models.Model):
     def get_to_approve_differences():
         return OutgoingInvoice.objects_all.filter(
             ~Q(total=F("correction_of__total")) & Q(correction_of__is_frozen=True, is_frozen=False))
+
+    def save(self, *args, **kwargs):
+        if self.is_frozen and self.is_frozen != self.is_frozen_original:
+                self.date = datetime_now_tz()
+        super(OutgoingInvoice, self).save(*args, **kwargs)
 
 
 class OutgoingInvoiceProductPosition(models.Model):
