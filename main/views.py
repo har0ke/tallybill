@@ -59,8 +59,9 @@ def download_csv(request, pk):
     outgoing_to_csv(invoice, buffer, request.GET.get("difference") is not None)
     buffer.seek(0)
     response = HttpResponse(buffer.getvalue(), content_type='text/csv')
-    response['Content-Disposition'] = ('attachment; filename=%s.csv' %
-                                       urllib.parse.quote(invoice.inventory.date.strftime("%Y%m%d")))
+    response['Content-Disposition'] = ('attachment; filename=%s%s.csv' %
+                                       (urllib.parse.quote(invoice.inventory.date.strftime("%Y%m%d")),
+                                        "diff" if request.GET.get("difference") is not None else ""))
     return response
 
 @staff_member_required
