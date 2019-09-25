@@ -336,18 +336,15 @@ class RecalculateThread(Thread):
 def outgoing_to_csv(outgoing, f, difference=False):
 
     def get_user_sum(outgoing_invoice):
-        if difference:
-            values = OutgoingInvoiceProductUserPosition.objects \
-                .filter(productinvoice__invoice=outgoing_invoice).values_list("user__pk", "user__username") \
-                .annotate(total=Sum(F("count") * F("productinvoice__price_each"))).order_by("user__username")
-            return dict(((x, (y, z)) for x, y, z in values))
-        else:
-            return {}
+        values = OutgoingInvoiceProductUserPosition.objects \
+            .filter(productinvoice__invoice=outgoing_invoice).values_list("user__pk", "user__username") \
+            .annotate(total=Sum(F("count") * F("productinvoice__price_each"))).order_by("user__username")
+        return dict(((x, (y, z)) for x, y, z in values))
 
     def get_diff_positions():
         current_positions = get_user_sum(outgoing)
 
-        if outgoing.correction_of is not None:
+        if outgoing.correction_of is not None and difference:
             previous_positions = get_user_sum(outgoing.correction_of)
         else:
             previous_positions = {}
