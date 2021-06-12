@@ -136,9 +136,11 @@ def schwund_charts(request):
     products, pnames = zip(*pnn)
     id_to_pname = dict(pnn)
     losses = dict([(product, [0] * len(dates)) for product in products])
-    for dt, product, loss in (OutgoingInvoiceProductPosition.objects.filter((Q(invoice__corrected_by=None) | Q(invoice__corrected_by__is_frozen=False)) & Q(invoice__is_frozen=True))
-                              .values_list("invoice__inventory__date", "product", "loss")):
-        losses[product][dates.index(dt)] = abs(loss) if abs(loss) != float("+inf") else 100
+    for dt, product, loss, total in (OutgoingInvoiceProductPosition.objects.filter((Q(invoice__corrected_by=None) | Q(invoice__corrected_by__is_frozen=False)) & Q(invoice__is_frozen=True))
+                              .values_list("invoice__inventory__date", "product", "loss", "total")):
+        if product == 4 and abs(loss) == float("+inf"):
+            print((loss, total, abs(loss) if abs(loss) != float("+inf") else (0 if total < 100 else 100)))
+        losses[product][dates.index(dt)] = abs(loss) if abs(loss) != float("+inf") else (0 if total < 100 else 100)
     new_losses = []
     for k in losses:
         new_losses.append((id_to_pname[k], json.dumps(losses[k])))
