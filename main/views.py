@@ -2,6 +2,7 @@
 # -*- coding: <utf-8> -*-
 import io
 import json
+from json.decoder import JSONDecodeError
 import math
 import urllib.parse
 from datetime import date, datetime, timedelta
@@ -14,7 +15,7 @@ from django.db.models import Max, Min, F
 from django.db.models.aggregates import Sum
 from django.db.models.query_utils import Q
 from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponseBadRequest
-from django.http.response import HttpResponse
+from django.http.response import Http404, HttpResponse
 from django.shortcuts import render
 
 # Create your views here.
@@ -204,7 +205,11 @@ def logout(request):
 @staff_member_required
 def select_product(request):
     if request.method == "POST":
-        users = json.loads(request.POST["json_data"])
+        print(request.POST["json_data"])
+        try:
+            users = json.loads(request.POST["json_data"])
+        except JSONDecodeError as e:
+            return Http404("Invalid data input")
         for user, products in users.items():
             user = User.objects.get(pk=int(user))
             for product, count in products.items():
