@@ -256,6 +256,7 @@ class ProductInPeriod(object):
         consumed_before_period = _get_total_consumption_until(self._product, date_from)
 
         real_consumptions = max(self.get_real_consumption(), 0)
+        remaining_consumptions = real_consumptions
 
         orders = self._product.order_set.order_by("incoming_invoice__date").values_list("count", "each_cents")
         if orders.count() == 0:
@@ -263,17 +264,18 @@ class ProductInPeriod(object):
         else:
             quantities, prices = zip(*orders)
         quantities, prices = list(quantities), list(prices)
-        still_there = 0
         # filter out all already billed quantities
         for i in range(len(quantities)):
-            v = min(consumed_before_period, quantities[i])
             if consumed_before_period > 0:
+                v = min(consumed_before_period, quantities[i])
                 consumed_before_period -= v
                 quantities[i] -= v
             if consumed_before_period == 0:
-                still_there += max(quantities[i] - real_consumptions, 0)
-                quantities[i] -= max(quantities[i] - real_consumptions, 0)
-                real_consumptions -= v
+                v = min(quantities[i], remaining_consumptions)
+                quantities[i] = v
+                remaining_consumptions -= v
+
+        assert(sum(quantities) == real_consumptions)
         if sum(quantities) == 0:
             return 0
         return sum([quantities[i] * prices[i] for i in range(len(prices))]) / sum(quantities)
